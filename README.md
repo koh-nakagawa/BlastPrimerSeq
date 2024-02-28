@@ -48,4 +48,4 @@ This script is freely available for research and commercial purposes.
 
 ## Contact
 
-If you have any questions or need support, feel free to contact koh-nakagawa@studiokohn.com.
+If you have any questions or need support, feel free to contact koh-nakagawa[at]studiokohn.com.
