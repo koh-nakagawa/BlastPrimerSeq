@@ -48,4 +48,4 @@ primer_num,primer_id,sequence
 
 ## 連絡先
 
-何かご不明な点やサポートが必要な場合は、koh-nakagawa@studiokohn.comまでお気軽にお問い合わせください。
+何かご不明な点やサポートが必要な場合は、koh-nakagawa[at]studiokohn.comまでお気軽にお問い合わせください。
