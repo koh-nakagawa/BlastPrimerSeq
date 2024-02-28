@@ -1,27 +1,3 @@
-"""
-blast_primer-seq.py
-
-Usage:
-
-This script is designed to perform BLASTN queries for primer sequences specified in a CSV file against a designated BLAST database, compile the BLAST results into a single output file named 'blast_primers_seq_merge.csv', and generate an additional file named 'blast_primers_seq_hit_count.csv'. The 'blast_primers_seq_merge.csv' file includes the formatted BLAST results for each primer, with evalue and sseqid separated by commas for easy CSV handling. The 'blast_primers_seq_hit_count.csv' file contains counts of BLAST hits with evalues less than e-100 and the total BLAST hits for each primer.
-
-Before running the script, ensure:
-- The input CSV file is formatted with columns for 'primer_num', 'primer_id', and 'sequence'.
-- The 'input_csv_path', 'blast_db_path', and 'output_dir' variables are updated with the paths to your input file, BLAST database, and desired output directory, respectively.
-
-The script sorts the output based on primer types ('sex' or 'auto'), primer numbers, and direction ('_fw' or '_rv'), with a priority given to the type and number sorting over the direction.
-
-Outputs:
-- 'blast_primers_seq_merge.csv': Contains the BLAST results for each primer, formatted and sorted according to specific criteria (primer type and number, followed by direction), with evalue and sseqid values separated by commas.
-- 'blast_primers_seq_hit_count.csv': Contains counts of hits with evalues < e-100 and total hits for each primer, helping users to quickly identify primers with significant matches.
-
-Requirements:
-- Python packages: pandas, os, subprocess, re, collections.defaultdict
-- A local BLAST database configured with the specified path in 'blast_db_path'.
-- Input CSV file with primer information at the specified path in 'input_csv_path'.
-"""
-
-
 import pandas as pd
 import os
 import subprocess
