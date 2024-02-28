@@ -1,5 +1,5 @@
 """
-blast_primer_seq_merge.py
+blast_primer-seq.py
 
 Usage:
 
