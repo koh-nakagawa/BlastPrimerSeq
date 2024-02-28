@@ -3,22 +3,17 @@ blast_primer_seq_merge.py
 
 Usage:
 
-This script is designed to perform BLASTN queries for primer sequences contained in a specified CSV file against
-a given BLAST database, compile the BLAST results into a single output file named 'blast_primers_seq_merge.csv',
-and generate an additional file named 'blast_primers_seq_hit_count.csv'. The latter file includes counts of BLAST hits
-with evalues less than e-100 and total BLAST hits for each primer.
+This script is designed to perform BLASTN queries for primer sequences specified in a CSV file against a designated BLAST database, compile the BLAST results into a single output file named 'blast_primers_seq_merge.csv', and generate an additional file named 'blast_primers_seq_hit_count.csv'. The 'blast_primers_seq_merge.csv' file includes the formatted BLAST results for each primer, with evalue and sseqid separated by commas for easy CSV handling. The 'blast_primers_seq_hit_count.csv' file contains counts of BLAST hits with evalues less than e-100 and the total BLAST hits for each primer.
 
 Before running the script, ensure:
 - The input CSV file is formatted with columns for 'primer_num', 'primer_id', and 'sequence'.
-- The 'input_csv_path', 'blast_db_path', and 'output_dir' variables are updated with the paths to your input file,
-  BLAST database, and desired output directory, respectively.
+- The 'input_csv_path', 'blast_db_path', and 'output_dir' variables are updated with the paths to your input file, BLAST database, and desired output directory, respectively.
 
-The script sorts the output based on primer types ('sex' or 'auto'), primer numbers, and direction ('_fw' or '_rv'),
-with a priority given to the type and number sorting over the direction.
+The script sorts the output based on primer types ('sex' or 'auto'), primer numbers, and direction ('_fw' or '_rv'), with a priority given to the type and number sorting over the direction.
 
 Outputs:
-- 'blast_primers_seq_merge.csv': Contains the formatted BLAST results for each primer.
-- 'blast_primers_seq_hit_count.csv': Contains counts of hits with evalues < e-100 and total hits for each primer.
+- 'blast_primers_seq_merge.csv': Contains the BLAST results for each primer, formatted and sorted according to specific criteria (primer type and number, followed by direction), with evalue and sseqid values separated by commas.
+- 'blast_primers_seq_hit_count.csv': Contains counts of hits with evalues < e-100 and total hits for each primer, helping users to quickly identify primers with significant matches.
 
 Requirements:
 - Python packages: pandas, os, subprocess, re, collections.defaultdict
@@ -74,36 +69,41 @@ for index, row in df.iterrows():
     try:
         subprocess.run(blast_command, check=True)
         with open(output_path, 'r') as result_file:
-            for line in result_file:
-                evalue, sseqid = line.split()
-                evalue_num = float(evalue.split('e')[1]) if 'e' in evalue else 0
-                blast_results[f'{primer_num}_{primer_id}'].append(line.strip())
+            results = result_file.read()
+            # Format results for CSV output
+            formatted_results = [','.join(line.split()) for line in results.strip().split('\n')]
+            blast_results[f'{primer_num}_{primer_id}'] = formatted_results
+
+            # Count hits
+            for line in formatted_results:
+                evalue = float(line.split(',')[0].split('e')[1]) if 'e' in line.split(',')[0] else 0
                 hit_counts[f'{primer_num}_{primer_id}']['blast_hit'] += 1
-                if evalue_num <= -100:
+                if evalue <= -100:
                     hit_counts[f'{primer_num}_{primer_id}']['evalue_lt_e-100'] += 1
     except subprocess.CalledProcessError as e:
         print(f"Error executing BLAST for primer {primer_num} {primer_id}: {e}")
 
     # Cleanup
     os.remove(temp_fasta_path)
-    os.remove(output_path)
 
-# Function to sort keys as before
-def sort_key(filename):
-    # Similar sorting function as before
+# Sorted keys based on custom sort function
+sorted_keys = sorted(blast_results.keys(), key=lambda x: (x.split('_')[0], int(re.search(r'\d+', x).group()), x))
 
-# Sorted keys based on custom sort function (not shown fully for brevity)
-sorted_keys = sorted(blast_results.keys(), key=sort_key)
+# Write to blast_primers_seq_merge.csv
+merge_output_path = os.path.join(output_dir, 'blast_primers_seq_merge.csv')
+with open(merge_output_path, 'w') as merge_file:
+    for key in sorted_keys:
+        merge_file.write(f'>{key}\n')
+        merge_file.write('evalue,sseqid\n')
+        merge_file.write('\n'.join(blast_results[key]))
+        merge_file.write('\n\n')
 
-# Write to a single file (blast_primers_seq_merge.csv)
-# Similar to previous functionality, not shown for brevity
-
-# New functionality: Write hit counts to a new file
+# Write hit counts to blast_primers_seq_hit_count.csv
 hit_counts_output_path = os.path.join(output_dir, 'blast_primers_seq_hit_count.csv')
 with open(hit_counts_output_path, 'w') as hit_counts_file:
     for key in sorted_keys:
         evalue_lt_e_100_hit = hit_counts[key]['evalue_lt_e-100']
         blast_hit = hit_counts[key]['blast_hit']
-        hit_counts_file.write(f'>{key}.csv\n')
+        hit_counts_file.write(f'>{key}\n')
         hit_counts_file.write('evalue<e-100_hit,blast_hit\n')
         hit_counts_file.write(f'"{evalue_lt_e_100_hit}","{blast_hit}"\n\n')
