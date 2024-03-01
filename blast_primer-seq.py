@@ -62,8 +62,30 @@ for index, row in df.iterrows():
     # Cleanup
     os.remove(temp_fasta_path)
 
-# Sorted keys based on custom sort function
-sorted_keys = sorted(blast_results.keys(), key=lambda x: (x.split('_')[0], int(re.search(r'\d+', x).group()), x))
+
+def custom_sort_key(primer_key):
+    # Extended regular expression to extract primer number and direction from the primer ID,
+    # including patterns for different notations of direction such as "Fw", "Rv", "forward", "reverse".
+    match = re.match(r'(\D*)(\d+)([_-])?(fw|rv|F|R|forward|reverse)', primer_key, re.IGNORECASE)
+    if not match:
+        # If there is no match, use a default sort order.
+        return (0, primer_key)
+
+    primer_num = int(match.group(2))  # Extract the primer number.
+    direction = match.group(4).lower()  # Normalize the direction to lowercase for uniformity.
+
+    # Map various direction notations to 'fw' or 'rv'.
+    direction_map = {'f': 'fw', 'fw': 'fw', 'forward': 'fw', 'r': 'rv', 'rv': 'rv', 'reverse': 'rv'}
+    direction = direction_map.get(direction, direction)
+
+    # Sort based on primer number and normalized direction.
+    return (primer_num, direction)
+
+# Use the custom sort function to sort keys.
+sorted_keys = sorted(blast_results.keys(), key=custom_sort_key)
+
+# The rest of the code (e.g., writing to files) remains unchanged.
+
 
 # Write to blast_primers_seq_merge.csv
 merge_output_path = os.path.join(output_dir, 'blast_primers_seq_merge.csv')
